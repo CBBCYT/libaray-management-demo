@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.BookMapper">
+
+    <resultMap id="bookResultMap" type="com.pojo.Book">
+        <result column="book_name" property="bookName" />
+        <result column="total_number" property="totalNumber" />
+        <result column="remain_number" property="remainNumber" />
+    </resultMap>
+    <delete id="deleteByIds">
+        delete from tb_book where id in
+        <foreach collection="ids" item="id" separator="," open='(' close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+       <select id="selectByPageAndCondition" resultMap="bookResultMap">
+            select *
+            from tb_book
+            <where>
+                <if test="book.bookName != null and book.bookName != ''">
+                    and book_name like #{book.bookName}
+                </if>
+
+                <if test="book.category != null and book.category != ''">
+                    and category like #{book.category}
+                </if>
+
+                <!--    <if test="book.label != null and book.label != ''">
+                    and label like #{book.label}
+                </if>-->
+            </where>
+            limit #{begin}, #{size}
+        </select>
+
+    <select id="selectTotalCountByCondition" resultType="java.lang.Integer">
+        select count(*)
+        from tb_book
+        <where>
+            <if test="bookName != null and bookName != ''">
+                and book_name like #{book.bookName}
+            </if>
+
+            <if test="category != null and category != ''">
+                and category like #{book.category}
+            </if>
+
+             <!--   <if test="label != null and label != ''">
+                and label like #{book.label}
+            </if> -->
+        </where>
+    </select>
+
+
+</mapper>

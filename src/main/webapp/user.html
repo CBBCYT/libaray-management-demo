@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style>
+        .el-header {
+            background-color: #B3C0D2;
+            color: #333;
+            text-align: center;
+            line-height: 60px;
+            height: 100px;
+        }
+
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: center;
+            line-height: 500px;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-header>账户信息</el-header>
+
+
+            <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+                <el-form-item label="账号" prop="username">
+                    <el-input v-model="ruleForm.username"></el-input>
+                </el-form-item>
+
+                <el-form-item label="密码" prop="password">
+                    <el-input v-model="ruleForm.password" autocomplete="off"></el-input>
+                </el-form-item>
+
+                <el-form-item label="新密码" prop="newPass">
+                    <el-input type="password" v-model="ruleForm.newPass" autocomplete="off"></el-input>
+                </el-form-item>
+
+                <el-form-item label="确认密码" prop="checkPass">
+                    <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
+                    <el-button @click="resetForm('ruleForm')">重置</el-button>
+                </el-form-item>
+            </el-form>
+
+
+    </el-container>
+
+
+</div>
+
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+
+
+    new Vue({
+        el: "#app",
+
+        mounted(){
+
+            //页面加载完成后立即执行
+            //发请求获取数据
+            //this.selectAll();
+        },
+
+        methods: {
+
+            selectAll()
+            {
+
+                var _this = this;
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/libaray-management-demo/user/selectAll"
+                }).then(function (response) {
+                    _this.tableData = response.data;
+                })
+            },
+
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        var _this = this;
+                        axios({
+                            method:"get",
+                            url:"http://localhost:8080/libaray-management-demo/user/updatePass?username="+_this.ruleForm.username+"&password="+_this.ruleForm.newPass,
+                        }).then(function (response) {
+                            if(response.data == "success") {
+                                _this.$message({
+                                    message: '修改成功!',
+                                    type: 'success'
+                                });
+                            }
+
+                        })
+                    } else {
+
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            }
+
+        },
+
+        data() {
+
+                var checkUsername = (rule, value, callback) => {
+                    var _this = this;
+
+                    axios({
+                        method:"post",
+                        url:"http://localhost:8080/libaray-management-demo/user/selectByUsername",
+                        data:value
+                    }).then(function (response){
+                        if(response.data === null) {
+                            callback(new Error('用户名不存在'));
+                        }
+                        else
+                        {
+                            _this.correctPass = response.data.password;
+                            _this.username = value;
+                            callback();
+                        }
+                    })
+
+                };
+
+                var checkPassword = (rule, value, callback) => {
+                    if (value === '') {
+                        callback(new Error('请输入密码'));
+                    } else if(value != this.correctPass)
+                    {
+                        callback(new Error('密码错误'));
+                    }
+                    else
+                    {
+                        callback();
+                    }
+                };
+
+            var validatePass = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请输入密码'));
+                } else {
+                    if (this.ruleForm.checkPass !== '') {
+                        this.$refs.ruleForm.validateField('checkPass');
+                    }
+                    callback();
+                }
+            };
+            var validatePass2 = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请再次输入密码'));
+                } else if (value != this.ruleForm.newPass) {
+                    callback(new Error('两次输入密码不一致!'));
+                } else {
+                    callback();
+                }
+            };
+                return {
+                    ruleForm: {
+                        username: '',
+                        password:'',
+                        newPass: '',
+                        checkPass: ''
+                    },
+                    rules: {
+                        username: [
+                            { validator: checkUsername, trigger: 'blur' }
+                        ],
+                        password: [
+                            { validator: checkPassword, trigger: 'blur' }
+                        ],
+                        newPass: [
+                            { validator: validatePass, trigger: 'blur' }
+                        ],
+                        checkPass: [
+                            { validator: validatePass2, trigger: 'blur' }
+                        ]
+
+                    },
+
+                    correctPass:'',
+
+                    username:''
+                };
+            }
+
+    })
+</script>
+</body>
+</html>

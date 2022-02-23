@@ -1,0 +1,539 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .el-table .warning-row {
+            background: oldlace;
+        }
+
+        .el-table .success-row {
+            background: #f0f9eb;
+        }
+    </style>
+
+</head>
+<body>
+<div id="app">
+
+    <!--搜索表单-->
+    <el-form :inline="true" :model="book" class="demo-form-inline">
+
+        <el-form-item label="书名">
+            <el-input v-model="book.bookName" placeholder="书名"></el-input>
+        </el-form-item>
+
+        <el-form-item label="分类">
+            <el-input v-model="book.category" placeholder="分类"></el-input>
+        </el-form-item>
+
+        <!--<el-form-item label="标签">
+            <el-select v-model="book.label" placeholder="标签">
+                <el-option label="启用" value="1"></el-option>
+                <el-option label="禁用" value="0"></el-option>
+            </el-select>
+        </el-form-item>-->
+
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+
+    <!--按钮-->
+
+    <el-row>
+
+        <el-button type="danger" plain @click="deleteByIds">批量删除</el-button>
+        <el-button type="primary" plain @click="addDialogVisible = true">新增</el-button>
+
+    </el-row>
+
+    <!--添加数据对话框表单-->
+    <el-dialog
+            title="编辑书本"
+            :visible.sync="addDialogVisible"
+            width="30%"
+    >
+
+        <el-form ref="form" :model="bookAdded" label-width="80px">
+            <el-form-item label="书名">
+                <el-input v-model="bookAdded.bookName"></el-input>
+            </el-form-item>
+
+            <el-form-item label="作者">
+                <el-input v-model="bookAdded.author"></el-input>
+            </el-form-item>
+
+            <el-form-item label="出版社">
+                <el-input v-model="bookAdded.publisher"></el-input>
+            </el-form-item>
+
+            <el-form-item label="类别">
+                <el-input v-model="bookAdded.category"></el-input>
+            </el-form-item>
+
+            <el-form-item label="标签">
+                <el-input v-model="bookAdded.label"></el-input>
+            </el-form-item>
+
+            <el-form-item label="总量">
+                <el-input v-model="bookAdded.totalNumber"></el-input>
+            </el-form-item>
+
+            <el-form-item label="余量">
+                <el-input v-model="bookAdded.remainNumber"></el-input>
+            </el-form-item>
+
+
+<!--            <el-form-item label="状态">
+                <el-switch v-model="book.status"
+                           active-value="1"
+                           inactive-value="0"
+                ></el-switch>
+            </el-form-item>-->
+
+            <el-form-item>
+                <el-button type="primary" @click="addBook">提交</el-button>
+                <el-button @click="addDialogVisible = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+
+    </el-dialog>
+
+    <!--修改数据对话框表单-->
+    <el-dialog
+            title="修改书本"
+            :visible.sync="updateDialogVisible"
+            width="30%"
+    >
+
+        <el-form ref="form" :model="bookUpdate" label-width="80px">
+            <el-form-item label="书名">
+                <el-input v-model="bookUpdate.bookName"></el-input>
+            </el-form-item>
+
+            <el-form-item label="作者">
+                <el-input v-model="bookUpdate.author"></el-input>
+            </el-form-item>
+
+            <el-form-item label="出版社">
+                <el-input v-model="bookUpdate.publisher"></el-input>
+            </el-form-item>
+
+            <el-form-item label="类别">
+                <el-input v-model="bookUpdate.category"></el-input>
+            </el-form-item>
+
+            <el-form-item label="标签">
+                <el-input v-model="bookUpdate.label"></el-input>
+            </el-form-item>
+
+            <el-form-item label="总量">
+                <el-input v-model="bookUpdate.totalNumber"></el-input>
+            </el-form-item>
+
+            <el-form-item label="余量">
+                <el-input v-model="bookUpdate.remainNumber"></el-input>
+            </el-form-item>
+
+
+            <!--            <el-form-item label="状态">
+                            <el-switch v-model="book.status"
+                                       active-value="1"
+                                       inactive-value="0"
+                            ></el-switch>
+                        </el-form-item>-->
+
+            <el-form-item>
+                <el-button type="primary" @click="updateBook">提交</el-button>
+                <el-button @click="updateDialogVisible = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+
+
+    </el-dialog>
+
+    <!--表格-->
+    <template>
+        <el-table
+                :data="tableData"
+                style="width: 100%"
+                :row-class-name="tableRowClassName"
+                @selection-change="handleSelectionChange"
+        >
+            <el-table-column
+                    type="selection"
+                    width="55">
+            </el-table-column>
+            <el-table-column
+                    type="index"
+                    width="50">
+            </el-table-column>
+
+            <el-table-column
+                    prop="bookName"
+                    label="书名"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="author"
+                    label="作者"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="publisher"
+                    align="center"
+                    label="出版社">
+            </el-table-column>
+            <el-table-column
+                    prop="category"
+                    align="center"
+                    label="类别">
+            </el-table-column>
+            <el-table-column
+                    prop="label"
+                    align="center"
+                    label="标签">
+            </el-table-column>
+            <el-table-column
+                    prop="totalNumber"
+                    align="center"
+                    label="总量">
+            </el-table-column>
+            <el-table-column
+                    prop="remainNumber"
+                    align="center"
+                    label="余量">
+            </el-table-column>
+
+            <el-table-column
+                    align="center"
+                    label="操作">
+
+                <el-row slot-scope="scope">
+                    <el-button type="primary" @click="onUpdate(scope.row)">修改</el-button>
+                    <el-button type="danger" @click="deleteById(scope.row)">删除</el-button>
+                </el-row>
+
+            </el-table-column>
+
+        </el-table>
+    </template>
+
+    <!--分页工具条-->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[5, 10, 15, 20]"
+            :page-size="5"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalCount">
+    </el-pagination>
+
+</div>
+
+
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted(){
+
+            //页面加载完成后立即执行
+            //发请求获取数据
+            this.selectAll();
+        },
+
+        methods: {
+
+            //查询所有，刷新页面
+            selectAll()
+            {
+                /*var _this = this;
+                axios({
+                    method:"get",
+                    url:"http://localhost:8080/libaray-management-demo/book/selectAll"
+                }).then(function (response){
+                    _this.tableData = response.data;
+
+                })*/
+
+                var _this = this;
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/libaray-management-demo/book/selectByPageAndCondition?current="+_this.currentPage+"&size="+_this.pageSize,
+                    data:this.book
+                }).then(function (response){
+                    _this.tableData = response.data.rows;
+                    _this.totalCount = response.data.totalCount;
+
+                })
+
+                 /*axios({
+                     method:"post",
+                     url:"http://localhost:8080/libaray-management-demo/book/selectByPageAndCondition?current="+_this.currentPage+"&size="+_this.pageSize,
+                     data:this.book
+                 }).then(response =>{
+                     this.tableData = response.data.rows;
+                     this.totalCount = response.data.totalCount;
+
+                 })*/
+             },
+
+             tableRowClassName({row, rowIndex}) {
+                 if (rowIndex === 1) {
+                     return 'warning-row';
+                 } else if (rowIndex === 3) {
+                     return 'success-row';
+                 }
+                 return '';
+             },
+
+
+             // 查询方法
+             onSubmit() {
+                 this.selectAll();
+             },
+
+             // 添加数据
+             addBook(){
+                 var _this = this;
+                 //发送ajax请求，添加数据
+                 axios({
+                     method:"post",
+                     url:"http://localhost:8080/libaray-management-demo/book/add",
+                     data:_this.bookAdded
+                 }).then1(function (response){
+                     if(response.data == "success")
+                     {
+                         //添加成功，关闭窗口
+                         _this.addDialogVisible = false;
+                         //刷新页面
+                         _this.selectAll();
+
+                         _this.$message({
+                             message: '添加成功!',
+                             type: 'success'
+                         });
+                     }
+
+                 })
+                 //重置对象
+                 Object.assign(this.$data, this.$options.data());
+             },
+
+            //点击修改按钮
+            onUpdate(obj)
+            {
+                this.updateDialogVisible = true;
+                this.bookUpdate = obj;
+            },
+
+            //修改数据
+            updateBook(){
+
+                var _this = this;
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/libaray-management-demo/book/update",
+                    data:_this.bookUpdate
+                }).then(function (response){
+                    if(response.data == "success")
+                    {
+                        //添加成功，关闭窗口
+                        _this.updateDialogVisible = false;
+                        //刷新页面
+                        _this.selectAll();
+
+                        _this.$message({
+                            message: '修改成功!',
+                            type: 'success'
+                        });
+                    }
+
+                })
+                //Object.assign(this.$data, this.$options.data());
+            },
+
+             //删除数据
+             deleteById(obj){
+                 var _this = this;
+                 axios({
+                     method:"post",
+                     url:"http://localhost:8080/libaray-management-demo/book/delete",
+                     data:obj.id
+                 }).then(function (response){
+                     if(response.data == "success")
+                     {
+                         //添加成功，关闭窗口
+                         _this.dialogVisible = false;
+                         //刷新页面
+                         _this.selectAll();
+
+                         _this.$message({
+                             message: '删除成功!',
+                             type: 'success'
+                         });
+                     }
+
+                 })
+             },
+
+             //批量删除
+             deleteByIds(){
+
+                 //弹出确认提示框
+                 this.$confirm('此操作将删除该数据, 是否继续?', '提示', {
+                     confirmButtonText: '确定',
+                     cancelButtonText: '取消',
+                     type: 'warning'
+                 }).then(() => {
+                     //确定按钮
+                     for(let i = 0; i< this.multipleSelection.length; i++)
+                     {
+                         let selectedEle = this.multipleSelection[i];
+                         this.selectedIds[i] = selectedEle.id;
+                     }
+
+                     var _this = this;
+                     //发送ajax请求，添加数据
+                     axios({
+                         method:"post",
+                         url:"http://localhost:8080/libaray-management-demo/book/deleteByIds",
+                         data:_this.selectedIds
+                     }).then(function (response){
+                         if(response.data == "success")
+                         {
+                             //刷新页面
+                             _this.selectAll();
+
+                             _this.$message({
+                                 message: '删除成功!',
+                                 type: 'success'
+                             });
+                         }
+
+                     })
+                 }).catch(() => {
+                     this.$message({
+                         //取消按钮
+                         type: 'info',
+                         message: '已取消删除'
+                     });
+                 });
+
+             },
+
+
+
+             //分页每一页条数
+             handleSizeChange(val) {
+                 //console.log(`每页 ${val} 条`);
+                 this.pageSize = val;
+                 this.selectAll();
+             },
+
+             //当前页码
+             handleCurrentChange(val) {
+                 //console.log(`当前页: ${val}`);
+
+                 this.currentPage = val;
+                 this.selectAll();
+             },
+
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+
+
+
+         },
+
+         data() {
+             return {
+                 // 当前页码
+                 currentPage: 1,
+
+                 //每页显示条数
+                 pageSize:5,
+
+                 //总记录数
+                 totalCount:100,
+
+                 // 添加数据对话框是否展示的标记
+                 addDialogVisible: false,
+
+                 // 修改数据对话框是否展示的标记
+                 updateDialogVisible: false,
+
+                 // 品牌模型数据
+                 book: {
+                     id: '',
+                     bookName: '',
+                     author: '',
+                     publisher:'',
+                     category:'',
+                     label:'',
+                     totalNumber:'',
+                     remainNumber:''
+                 },
+
+                 // 添加品牌模型数据
+                 bookAdded: {
+                     id: '',
+                     bookName: '',
+                     author: '',
+                     publisher:'',
+                     category:'',
+                     label:'',
+                     totalNumber:'',
+                     remainNumber:''
+                 },
+
+                 // 修改品牌模型数据
+                 bookUpdate: {
+                     id: '',
+                     bookName: '',
+                     author: '',
+                     publisher:'',
+                     category:'',
+                     label:'',
+                     totalNumber:'',
+                     remainNumber:''
+                 },
+
+
+                 // 复选框选中数据集合
+                 multipleSelection: [],
+                 //被选中的id数组
+                 selectedIds: [],
+                 // 表格数据
+                 tableData: [/*{
+                     id:'0',
+                     bookName: '名人传',
+                     author: '罗曼罗兰',
+                     publisher:"译林出版社",
+                     category:"名人传记",
+                     label:"传记",
+                     totalNumber:"10",
+                     remainNumber:"1000"
+                 }*/]
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>
